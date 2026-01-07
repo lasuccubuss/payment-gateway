@@ -16,7 +16,10 @@ public record PaymentRequest(
         @JsonProperty("user_id") Long userId,
 
         @NotNull
-        @JsonProperty("payment_method")PaymentMethod paymentMethod,
+        @JsonProperty("payee_id") Long payeeId,
+
+        @NotNull
+        @JsonProperty("payment_method") PaymentMethod paymentMethod,
 
         @Valid
         @NotNull
@@ -24,7 +27,7 @@ public record PaymentRequest(
 
         @Valid
         CustomerRequest customer
-        ) {
+) {
 
     //Inner record ou Records internos para facilitar
     public record AmountRequest(
@@ -42,6 +45,6 @@ public record PaymentRequest(
             String name,
 
             @NotBlank(message = "O endereço é obrigatório")
-            String address){
+            String address) {
     }
 }

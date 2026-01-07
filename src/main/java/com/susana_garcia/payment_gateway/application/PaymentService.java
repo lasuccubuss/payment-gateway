@@ -8,6 +8,7 @@ import com.susana_garcia.payment_gateway.infraestructure.PaymentRequest;
 import com.susana_garcia.payment_gateway.infraestructure.persistence.TransactionEntity;
 import com.susana_garcia.payment_gateway.infraestructure.persistence.TransactionRepository;
 import com.susana_garcia.payment_gateway.infraestructure.persistence.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +18,14 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class PaymentService {
 
+    //aqui é onde está toda a regra de negócio
+
     private final TransactionRepository transactionRepository;//variável declarada
 
     private final UserRepository userRepository;
 
 
+    @Transactional
     public PaymentResponse createTransaction(PaymentRequest request) {
 
         User sender = userRepository.findById(request.userId()).orElseThrow(
@@ -32,9 +36,19 @@ public class PaymentService {
             throw new RuntimeException("Saldo insuficiente!");
         }
 
-        //atualiza o valor do saldo
+        //tira do pagador
         BigDecimal novoSaldo =  BigDecimal.valueOf(request.amount().value());//corrigindo o valor
         sender.setBalance(sender.getBalance().subtract(novoSaldo));//subtraindo o valor
+
+        //regra de enviar o valor para o remetente
+        User receiver = userRepository.findById(request.payeeId()).orElseThrow(
+                () -> new RuntimeException("Recebedor não encontrado!")
+        );//encontra o beneficiário no Service
+
+        //gera a matemática para enviar o saldo
+        BigDecimal enviaSaldo = BigDecimal.valueOf(request.amount().value());
+        receiver.setBalance(receiver.getBalance().add(enviaSaldo));
+        userRepository.save(receiver);
 
         //comunicando ao banco de dados o valor atualizado
         userRepository.save(sender);
