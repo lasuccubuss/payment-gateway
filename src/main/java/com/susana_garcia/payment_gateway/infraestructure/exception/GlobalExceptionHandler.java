@@ -37,4 +37,11 @@ public class GlobalExceptionHandler {
                 return problemDetail;
     }
 
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ProblemDetail handleInsufficientBalanceException(InsufficientBalanceException ex){
+        ProblemDetail problemDetail = ProblemDetail
+                .forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        problemDetail.setTitle("Saldo insuficiente!");
+        return problemDetail;
+    }
 }

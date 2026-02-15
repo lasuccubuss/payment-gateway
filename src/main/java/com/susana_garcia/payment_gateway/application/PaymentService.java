@@ -5,6 +5,7 @@ import com.susana_garcia.payment_gateway.domain.TransactionNotFoundException;
 import com.susana_garcia.payment_gateway.domain.TransactionStatus;
 import com.susana_garcia.payment_gateway.domain.User;
 import com.susana_garcia.payment_gateway.infraestructure.PaymentRequest;
+import com.susana_garcia.payment_gateway.infraestructure.exception.InsufficientBalanceException;
 import com.susana_garcia.payment_gateway.infraestructure.persistence.TransactionEntity;
 import com.susana_garcia.payment_gateway.infraestructure.persistence.TransactionRepository;
 import com.susana_garcia.payment_gateway.infraestructure.persistence.UserRepository;
@@ -33,7 +34,7 @@ public class PaymentService {
 
         //fazendo a verificação do dinheiro
         if(sender.getBalance().compareTo(BigDecimal.valueOf(request.amount().value())) < 0){
-            throw new RuntimeException("Saldo insuficiente!");
+            throw new InsufficientBalanceException("Saldo insuficiente!");//evita mascarar bugs
         }
 
         //tira do pagador
