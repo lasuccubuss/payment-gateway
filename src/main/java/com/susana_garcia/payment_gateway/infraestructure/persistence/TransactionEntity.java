@@ -28,6 +28,9 @@ public class TransactionEntity {
     private Long amount;
     private String currency;
 
+    Long senderId;
+    Long receiverId;
+
     @Enumerated(EnumType.STRING) //vai salvar o PIX como texto no banco
     private PaymentMethod method;
 

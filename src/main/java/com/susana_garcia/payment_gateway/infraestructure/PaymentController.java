@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController { // Nome corrigido com 't'
@@ -28,5 +30,15 @@ public class PaymentController { // Nome corrigido com 't'
     public ResponseEntity<PaymentResponse> getPayment(@PathVariable Long id){
         PaymentResponse response = paymentService.findById(id);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/user/{userId}/history")
+    public ResponseEntity<List<PaymentResponse>> getHistory(@PathVariable Long userId) {
+
+        // 1. Chama o nosso motor que acabamos de construir
+        List<PaymentResponse> history = paymentService.getTransactionHistory(userId);
+
+        // 2. Devolve a lista com o Status 200 (OK)
+        return ResponseEntity.ok(history);
     }
 }

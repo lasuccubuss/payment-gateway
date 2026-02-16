@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -57,6 +58,8 @@ public class PaymentService {
         //--------------------- TUDO AQUI É TRANSAÇÃO PURA ----------------//
         //objeto de domínio para a Entidade
         TransactionEntity transactionEntity = new TransactionEntity();
+        transactionEntity.setSenderId(request.userId());
+        transactionEntity.setReceiverId(request.payeeId());
         transactionEntity.setAmount(request.amount().value());
         transactionEntity.setStatus(TransactionStatus.CREATED);//definindo o Status com ENUM
         transactionEntity.setCurrency(request.amount().currency());
@@ -90,4 +93,17 @@ public class PaymentService {
             );
         }
 
+    public List<PaymentResponse> getTransactionHistory(Long userId) {
+        return transactionRepository.findBySenderIdOrReceiverId(userId, userId)
+                .stream()
+                .map(entity -> new PaymentResponse(
+                        entity.getId(),
+                        entity.getStatus(),
+                        entity.getMethod(),
+                        new PaymentResponse.AmountResponse(entity.getAmount(), entity.getCurrency()),
+                        new PaymentResponse.CustomerResponse(entity.getCustomerName(), entity.getCustomerAddress())
+                ))
+                .toList();
     }
+
+}
