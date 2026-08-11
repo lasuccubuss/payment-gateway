@@ -4,6 +4,7 @@ package com.susana_garcia.payment_gateway.infraestructure;
 
 import com.susana_garcia.payment_gateway.application.PaymentResponse;
 import com.susana_garcia.payment_gateway.application.PaymentService;
+import com.susana_garcia.payment_gateway.domain.Transaction;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/payments")
+@RequestMapping("/api/transactions")
+@CrossOrigin(origins = "http://localhost:5173")
 public class PaymentController { // Nome corrigido com 't'
 
     private final PaymentService paymentService;
@@ -30,6 +32,11 @@ public class PaymentController { // Nome corrigido com 't'
     public ResponseEntity<PaymentResponse> getPayment(@PathVariable Long id){
         PaymentResponse response = paymentService.findById(id);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PaymentResponse>> getAll() {
+        return ResponseEntity.ok(paymentService.getTransactionHistory(1L));
     }
 
     @GetMapping("/user/{userId}/history")

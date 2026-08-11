@@ -43,6 +43,7 @@ class PaymentServiceTest {
         PaymentRequest request = new PaymentRequest(
                 17L,
                 1L,
+                1L,
                 PaymentMethod.PIX, //objeto específico
                 new PaymentRequest.AmountRequest(1000L, "BRL"), //objeto específico
                 new PaymentRequest.CustomerRequest("Nome", "Endereço")
@@ -81,6 +82,7 @@ class PaymentServiceTest {
         sender.setBalance(BigDecimal.TEN);
 
         PaymentRequest request = new PaymentRequest(
+                1L,
                 1L,
                 1L,
                 PaymentMethod.PIX,
