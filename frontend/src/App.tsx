@@ -12,7 +12,7 @@ function App() {
   const [payeeId, setPayeeId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Função para procurar o histórico de transações
+  // Função para buscar o histórico de transações
   const fetchTransactions = () => {
     api.get('/api/transactions/user/1/history')
       .then(response => {
@@ -36,35 +36,42 @@ function App() {
 
     setSubmitting(true);
 
+    const idempotenceKey = crypto.randomUUID();
+
     const paymentRequest = {
-      userId: 1, // Fixado como usuário logado para teste
-      payeeId: Number(payeeId),
-      amount: {
-        value: Number(amount),
+      order_id: Math.floor(Math.random() * 90000) + 10000,
+      user_id: 1,
+      payee_id: Number(payeeId),
+      payment_method: 'PIX',
+      transaction_amount: {
+        value: Math.round(Number(amount) * 100),
         currency: 'BRL'
       },
-      paymentMethod: 'PIX',
       customer: {
         name: 'Susana Garcia',
         address: 'Rua das Flores, 123'
-      },
-      description: description // Caso queira enviar para o backend
+      }
     };
 
     try {
-      await api.post('/api/transactions', paymentRequest);
+      await api.post('/api/transactions', paymentRequest, {
+        headers: {
+          'Idempotence-Key': idempotenceKey,
+          'Content-Type': 'application/json'
+        }
+      });
+
       alert('Pagamento processado com sucesso!');
 
-      // Limpa o formulário
       setAmount('');
       setDescription('');
       setPayeeId('');
 
-      // Atualiza a tabela automaticamente
       fetchTransactions();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao processar pagamento:", error);
-      alert('Erro ao enviar pagamento.');
+      const msg = error.response?.data?.detail || error.response?.data?.title || 'Erro ao enviar pagamento.';
+      alert(`Falha: ${msg}`);
     } finally {
       setSubmitting(false);
     }
@@ -91,6 +98,7 @@ function App() {
                   value={payeeId}
                   onChange={(e) => setPayeeId(e.target.value)}
                   placeholder="Ex: 2"
+                  required
                   style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                 />
               </div>
@@ -99,9 +107,11 @@ function App() {
                 <input
                   type="number"
                   step="0.01"
+                  min="0.01"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
+                  required
                   style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                 />
               </div>
@@ -122,17 +132,17 @@ function App() {
               type="submit"
               disabled={submitting}
               style={{
-                backgroundColor: '#2ecc71',
+                backgroundColor: submitting ? '#95a5a6' : '#2ecc71',
                 color: 'white',
                 padding: '10px',
                 border: 'none',
                 borderRadius: '4px',
                 fontWeight: 'bold',
-                cursor: 'pointer',
+                cursor: submitting ? 'not-allowed' : 'pointer',
                 transition: '0.2s'
               }}
             >
-              {submitting ? 'A processar...' : 'Confirmar Pagamento'}
+              {submitting ? 'Processando...' : 'Confirmar Pagamento'}
             </button>
           </form>
         </div>
@@ -152,24 +162,29 @@ function App() {
               </tr>
             </thead>
             <tbody>
-              {transactions.map((t: Transaction) => (
-                <tr key={t.id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '12px' }}>R$ {t.amount?.toFixed(2) || "0.00"}</td>
-                  <td style={{ padding: '12px' }}>{t.description || "Sem descrição"}</td>
-                  <td style={{ padding: '12px' }}>
-                    <span style={{
-                      backgroundColor: t.status === 'CREATED' ? '#fff3cd' : '#d4edda',
-                      color: t.status === 'CREATED' ? '#856404' : '#155724',
-                      padding: '4px 10px',
-                      borderRadius: '20px',
-                      fontSize: '0.85em',
-                      fontWeight: 'bold'
-                    }}>
-                      {t.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {transactions.map((t: any) => {
+                const rawAmount = t.amount ?? t.transaction_amount?.value ?? t.value ?? 0;
+                return (
+                  <tr key={t.id} style={{ borderBottom: '1px solid #eee' }}>
+                    <td style={{ padding: '12px' }}>
+                      R$ {(rawAmount / 100).toFixed(2)}
+                    </td>
+                    <td style={{ padding: '12px' }}>{t.description || "Sem descrição"}</td>
+                    <td style={{ padding: '12px' }}>
+                      <span style={{
+                        backgroundColor: t.status === 'CREATED' ? '#fff3cd' : '#d4edda',
+                        color: t.status === 'CREATED' ? '#856404' : '#155724',
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        fontSize: '0.85em',
+                        fontWeight: 'bold'
+                      }}>
+                        {t.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
